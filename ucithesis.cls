@@ -161,7 +161,7 @@
 \newcommand{\curriculumvitaepage}
 {
 	\begin{center}
-		\textbf{\Large VITA} \\
+		\textbf{\Large CURRICULUM VITAE} \\
 		\vspace{0.4in}
 		\textbf{\large{\Authorname}}
 	\end{center}

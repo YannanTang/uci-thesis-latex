@@ -16,7 +16,7 @@
 \usepackage{amsthm}
 \usepackage{array}
 \usepackage{graphicx}
-\usepackage{natbib}
+\usepackage[round]{natbib}
 \usepackage{relsize}
 \usepackage[titletoc]{appendix}
 
@@ -25,6 +25,13 @@
 \usepackage{subcaption}  % \begin{subfigure}...\end{subfigure} within figure
 \usepackage{multirow}
 \usepackage{tabularx}
+
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{upgreek}
+\usepackage{url}
+\usepackage{amsfonts}
 
 % Uncomment the following to attempt to enforce Type 1 or TrueType 
 % fonts. ProQuest does not want the type 3 fonts used by default as
@@ -60,6 +67,13 @@
 %\widowpenalty=10000
 %\clubpenalty=10000
 
+
+\def\bSig\mathbf{\Sigma}
+\newcommand{\VS}{V\&S}
+\newcommand{\tr}{\mbox{tr}}
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\x}{\mathbf{x}}
+
 % Modify or extend these at will.
 \newtheorem{theorem}{\textsc{Theorem}}[chapter]
 \newtheorem{definition}{\textsc{Definition}}[chapter]
@@ -94,8 +108,11 @@
 % Include the different components of your thesis, in separate files.
 % Using \include allows you to set \includeonly above.
 \include{chapter1}
-\include{chapter2}
 %\include{chapter2}
+%\include{chapter3}
+%\include{chapter4}
+%\include{chapter5}
+%\include{chapter6}
 % ... and so on
 
 % These commands fix an odd problem in which the bibliography line
@@ -105,8 +122,9 @@
 
 % "References should be formatted in style most common in discipline",
 % abbrv is only a suggestion.
-\bibliographystyle{abbrv}
-\bibliography{thesis}
+%\bibliographystyle{abbrv}
+\bibliographystyle{plainnat}
+\bibliography{2randCiting.bib}
 
 % The Thesis Manual says not to include appendix figures and tables in
 % the List of Figures and Tables, respectively, so these commands from
@@ -116,8 +134,8 @@
 \captionsetup[table]{list=no}
 
 % If you have an appendix, it should come after the references.
-\begin{appendices}
-\include{appendix}
-\end{appendices}
+%\begin{appendices}
+%\include{appendix}
+%\end{appendices}
 
 \end{document}

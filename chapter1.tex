@@ -1,58 +1,37 @@
 \chapter{Introduction}
 
-In epidemiology studies, geospatial disparities of certain disease risks are of common interest since the potential unequal risks could be a result of location-related risk factors. These factors could be environmental, demographic, socioeconomic among others. Thus, spatial epidemiologists frequently aim to estimate a risk pattern over an area under study, which is frequently a residential geospatial area. 
+\section{Disease mapping with individual-level point-referenced data in epidemiology studies }
 
-This is an example using the \LaTeX{} template for UCI theses and
-dissertation documents \cite{uci-thesis-latex}. Figure
-\ref{fig:sourcecode} is just for illustration purposes, as is Table
-\ref{tab:coordinates}.
+% Why care about spatial
+% Todo: explain what NCCN and HVH is. Gelfand study of disparity
 
-\begin{figure}
-\begin{verbatim}
-#include <iostream>
-int main(int argc, char** argv) {
-  std::cout << "Hello World." << std::endl;
-  return 0;
-}
-\end{verbatim}
-  \caption{Example source code.}
-  \label{fig:sourcecode}
-\end{figure}
+In epidemiology studies, geospatial disparities of certain disease risks are of common interest since the potential unequal risks over an specific geographic area could potentially be a result of location-related risk factors. These factors could be environmental, demographic, socioeconomic among others. In plain language, when investigating a specific disease, epidemiologists frequently aim to identify areas where residents are more likely to develop the disease. Based on the identified areas with high risk, it would be more probable to investigate the underlying risk factors that are associated with occurrence rate of the disease by exploring the difference in potentially relevant factors between high and low risk areas. Once one or more factors are identified, corresponding actions, such as environmental treatment or policy modification, would be possible. For instance, \cite{bristow2015spatial} conducted a spatial analysis on advanced-stage ovarian cancer mortality in California and found significant geospatial disparity in mortality rate, based on which they managed to identify whether a patient received NCCN guideline adherent care and treatment at an HVH as the hidden risk factor. The study would therefore help reducing the advanced-stage ovarian cancer mortality by proposing corresponding guidelines or suggestions to certain medical centers. 
 
-\section{Background}
+% The individual-based 
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+Partially due to the lack of high resolution data collection and insufficient computing power, traditional disease mapping commonly concentrate on areal data where a specific area, such as a country, a state, or a county as one unit hence the inference are made on the whole areas rather than specific individuals or certain spots within the areas. This class of studies made meaningful inference but the resolution would not be sufficiently satisfying when data are collected on each individual or measurements include accurate geographic information (e.g. longitude and latitude in many cases). 
 
-\begin{table}
-  \centering
-  \begin{tabular}{|rr|r|}
-    \hline
-    $x$ & $y$ & $z$ \\
-    \hline
-    14 & 12 & -2 \\
-    0 & 33 & -25 \\
-    -3 & 11 & 22 \\
-    4 & 4 & 6 \\
-    \hline
-  \end{tabular}
-  \caption{Example coordinates.}
-  \label{tab:coordinates}
-\end{table}
+Datasets are called individual if observations within the datasets contain information on specific individuals. In spatial analysis, point-referenced data, or point-level data indicate datasets where items are observed at precise spots on a map. Along with the development of data storage and measurement techniques, these data are becoming increasingly prevalent. My dissertation work therefore focused on methodology in spatial analysis for individual-level point-referenced data. Since these data provide information on unique individuals and locations, inference with higher resolution would be possible, compared to the classic methods that are designed for areal data. In particular, with individual-level point-referenced data, spatial epidemiologist, along with statisticians, naturally expect efficient usage of data where inference could be drawn at virtually all locations on the map of interest rather than one marginal inference over one whole area. 
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+% Methods for point-referenced data 
+As such, statistical tools for individual-level point-referenced data would be in high demand. In general, nonparametric smoothing techniques, including both freqentist and Bayesian approaches, are used to estimate the underlying spatial risk pattern in order to render inference on a certain type of disease risk at virtually every single location. Further, generalized additive models (GAMs) \citep{hastie1990generalized} with bivariate smoothers become increasingly popular when both geospatial and confounding effects exist and the response is assumed to follow an exponential distribution. Examples of these spatial epidemiology studies could be found in \citet{vieira2009spatial} and \citet{bristow2015spatial}. 
 
+\section{Motivating examples}
+
+\subsection{Birth defects study in Massachusetts}
+A fairly recent study of birth defects in the state of Massachusetts was conducted by  \cite{girguis2016maternal}. In the study, all recorded births in the Massachusetts Birth Defects Registry (MBDR) having cardiac, orofacial and neural tube defects from 2001 to 2009 were identified as cases and 1000 live births per year without defects were sampled as common controls. Among the recorded defects, one of the most common was patent ductus arteriosus (PDA).  PDA is a cardiovascular birth defect in which abnormal blood flow occurs between two of the major arteries connected to the heart and is associated with high morbidity and mortality. Residential longitude and latitude were recorded for all observations as well as potential confounding variables including maternal age, adequacy of prenatal care, maternal race, maternal education level and number of siblings. 
+
+A primary goal of the MBDR study is to quantify geospatial risks for PDA with adjustment for known risk factors, thus allowing epidemiologists to further explore the underlying space-related risk factors. Moreover, since data are collected over 9 years and the spatial risk pattern could possibly change over the years, statistical tools to estimate time-specific spatial risk pattern are in need, as well as a class of hypothesis tests that formally decide if the spatial risk patterns at each time significantly differ from each other. 
+
+\subsection{Serum PFOA concentration study}
+
+Another recent spatial epidemiology study was conducted by \citet{bartell2010rate} to investigate serum perfluorooctanoic acid (PFOA) concentration among residents in Lubeck, West Virginia and Little Hocking, Ohio. In this study, researchers aimed to understand the declining behavior of PFOA concentration after granular activated carbon filtration on the public water systems in 2007. By design, 200 residents were included and 6 blood samples were to collect from each resident from May 2007 to August 2008 so that a trend of PFOA concentration could be observed. Besides PFOA concentration, residents' information such as gender, age and recent water consumption type (public or bottled water) was recorded as well as precise residential location (recorded as longitude and latitude). 
+
+One of the objectives is to understand the geospatial distribution of residents' serum PFOA concentration in order to help identify potential latent space-confounded risk factors. However, the since this study is a longitudinal one where individuals get repeated measurements, the estimation of spatial effects should be achieved with adjustment of confounding variables as well as the within individual correlation.
+
+\section{Overview of this dissertation}
+
+In this Chapter, we introduce the background and motivating examples for my dissertation work. In Chapter 2, we present statistical methodology background based on which our approaches are developed. The covered statistical background include frequentist and Bayesian smoothing techniques, generalized additive models (GAMs) and generalized linear mixed models. In Chapter 3, we propose stratified smoothers and incorporate these smoothers into GAMs and further developed a class of permuted mean squared difference (PMSD) tests to detect temporal heterogeneity of geospatial effects, with application on birth defects study in Massachusetts. In Chapter 4, we generalize kernel smoothers with variance-covariance adjustment, describe additive mixed models (AMMs) framework with kernel smoothers and further propose a novel backfitting algorithm to fit AMMs making use of our generalized kernel smoothers. Chapter 5 could be considered as an extension of Chapter 4, accommodating exponential family response by combining penalized quasi-likelihood (PQL) procedure and the fitting procedure in Chapter 4. Either of Chapter 4 and 5 includes an application of the proposed methods on the serum PFOA study and manages to identify high and low risk areas in Lubeck, WV and Little Hocking, OH area. Chapter 6 covers relevant discussion and some insights on probable future avenue of research.
 
 %%% Local Variables: ***
 %%% mode: latex ***

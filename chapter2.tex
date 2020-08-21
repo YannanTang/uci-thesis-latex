@@ -1,66 +1,235 @@
 \chapter{Statistical background}
 
-Conditional AIC
+\section{Smoothers for disease mapping}
+	Smoothing functions, also known as smoothers, are commonly used to explore the relationship between two or more variables when it is desirable to avoid assuming a parametric function for the relationship. Popular smoothing techniques include running-mean, running-line, $K$-nearest neighbors and kernel smoothers. Since flexible fitting and estimation are provided, smoothing functions are widely used when spatial risk patterns are to be investigated. Commonly used smoothers in the context of bivariate spatial smoothing include local regression (LOESS), regression splines and Gaussian process models. %In this proposal, we present a simple simulated example where two variables, $x$ and $y$, are defined as stated in (\ref{sim:ss1}) in order to illustrate the performance of these smoothers. 
+	
+	In this section, we introduce and review methods to specify and estimate a smooth function $f$ relating a univariate response, $y_i$ to covariate(s) $\x_i$ (\ref{mod:tosmth}). Note that $\x_i$ could be  univariate or a multidimensional vector. When introducing smoothing techniques, we present the methods for univariate smoothers where $\x_i$ is univariate and further generalize them to bivariate smoothing situations. 
+	\begin{equation} \label{mod:tosmth}
+	y_i =f(\x_i)+\epsilon_i, \ \ i=1,2,\dots,N,
+	\end{equation} 
+	where $\epsilon_i$ is a random error.
+	%
+	%\begin{equation} \label{sim:ss1}
+	%\begin{split}
+	%i&=1,2,\dots,100\\
+	%x_i&=i/10\\
+	%y_i&=sin(x_i)+\frac{(x_i-3)^2}{30}+\epsilon_i\\
+	% X&\stackrel{i.i.d.}{\sim}N(0,\sigma=0.3)
+	%\end{split}
+	%\end{equation} 
 
-\begin{equation}
-\textbf{cAIC}=-2log(L(y|\hat{\beta}(y),\hat{b}(y))L(\hat{b}(y)|\hat{\alpha}(y)))+2p
-%\textbf{cAIC}=-2\L(y|\hat{\beta}(y),\hat{b}(y))L(\hat{b}|\hat{\alpha})+2p
+
+\subsection{LOESS}
+	
+	Locally weighted regression smoothing (LOESS - LOcal regrESSion) follows the intuitive idea that the underlying curve can be assumed to be linear in a local region. Based on this idea, when estimation of a certain location is desired, one can consider a weighted average of the response among $k$ neighboring observations. Using the $k$ nearest neighbors, instead of a simple linear model, a weighted linear regression is adopted so that closer observations render more weight in the fitting process. The procedure for finding the LOESS estimate of the smoothing function $\hat{f}(x_0)$ at location $x_0$, when utilizing the tri-cube weight function, is shown in Algorithm \ref{alg:lowess}.  
+	\begin{algorithm}[h]
+		\caption{LOESS fitting procedure}
+		\begin{algorithmic}[]
+			\State Identify $k$ nearest neighbors of $x_0$, denoted by $N_{b}(x_0)$. 
+			\State Find the greatest distance among the neighbors, $\Delta(x_0)=\max_{x_j\in N_b(x_0)}|x_j-x_0|$.
+			\State Assign weights to the neighbors using the tri-cube weight function $W(\frac{|x_j-x_0|}{\Delta(x_0)})$ where
+			\begin{equation} \label{func:triwt}
+			W(z)=
+			\begin{cases}
+			(1-z^3)^3, &\quad \text{for} 0\leq z < 1;\\
+			0 &\quad \text{otherwise}. 
+			\end{cases}
+			\end{equation} 
+			\State Achieve the fitted value $\hat{f}(x_0)$ from the weighted least-squares fit of $y$ to $x$ confined to $N(x_0)$ using the tri-cube weights $W(\frac{|x_j-x_0|}{\Delta(x_0)})$.
+		\end{algorithmic}
+		\label{alg:lowess}
+	\end{algorithm}
+
+	If bivariate smoothing is of interest, as in the case of spatial smoothing for disease risk, the above LOESS procedure can be easily generalized. In this case, when defining the nearest $k$ observations, Euclidean distances between every pair of points is commonly used. Analogous to the univariate case, local weighted linear regressions using the two covariates where weights are decided by tri-cube weight function are generally employed. 
+
+\subsection{Basis expansion methods}
+
+Basis expansion smoothers assume that the relationship $f$ associating $\x$ to response $y$ can be expressed as
+\begin{equation} \label{mod:basexp}
+f(\x) =\sum_{m=1}^{M}\beta_mh_m(\x),
+\end{equation} 
+where $h_m(\x), m=1,\dots,M$ are transformations defined on $\mathbb{R}^p\rightarrow \mathbb{R}$ and $p$ stands for the dimension of $\x$. Hence $p=1$ results in univariate smoothing while $p=2$ will render bivariate smoothing. 
+
+As a simple example, polynomial expansions for univariate $\x$ use basis functions defined as 
+\begin{equation} \label{mod:polybas}
+h_m(x)=x^m, m=1,2,\dots,d,
+\end{equation} 
+where $d$ is the chosen degree of polynomial. %Some smoothing with polynomial expansions for simulated data could be found in % \ref{fig:simpfitting}. 
+
+%todo another example cubic regression splines from piece wise 
+Another class of basis expansion smoothers follows the spirit of piecewise regressions. While the whole curve is flexible where no parametric form is proper, this class of smoothers assumes a parametric relationship between response and explanatory variables such as linear or polynomial patterns. This sounds similar to LOESS smoothers, however the difference is that piecewise regressions place knots on the support of the explanatory variables so that local regressions are restricted to the generated intervals. In contrast LOESS smoothers use the nearest $k$ observations and hence the local intervals used for regressions depend on where the nearest neighbors are. 
+
+A widely used type of univariate piecewise regression is the natural cubic regression spline smoother. Assume knots are placed at $\xi_1<\xi_2<\dots<\xi_K$. Natural cubic regression splines use cubic regressions between $\xi_i$ and $\xi_{i+1}$, $i=1,2,\dots,K-1$. In addition, to achieve smooth fitting, continuity of the underlying function, as well as continuous first and second derivatives, is required. With this specification, it can be shown that a the induced basis expansion can be expressed as
+\begin{equation} \label{mod:cubic}
+f(x)=\beta_0+\beta_1x+\beta_2x^2+\beta_3x^3+\beta_4h(x,\xi_1)+\dots+\beta_{K+3}h(x,\xi_K)
+\end{equation} 
+where 
+\begin{equation} \label{func:cubh}
+h(x,\xi)=
+\begin{cases}
+(x-\xi)^3, &\quad \text{for } x>\xi;\\
+0 &\quad \text{otherwise}. 
+\end{cases}
+\end{equation} 
+This smoother is called a cubic regression spline. One arising issue is that since the edge of the support has data on only one side and observations are commonly sparse at edges, cubic regressions can be vulnerable to overfitting. To address this issue, one can force the function to be linear at the boundaries, i.e. for $x<\xi_1$ and $x>\xi_K$. This constraints transforms cubic regression splines to natural cubic regression splines and renders a model shown in (\ref{mod:ncub}).
+\begin{equation} \label{mod:ncub}
+f(x)=\beta_0+\beta_1x+\beta_2h(x,\xi_1)+\dots+\beta_{K}h(x,\xi_{K-1})+\beta_{K+1}(x-\xi_K)^+
+\end{equation} 
+Natural cubic regression splines provide an elegant way to model an unknown relationship when researchers have a good sense of where the knots should be placed. However, the location of knots is not trivial to decide in most cases. Model selection with respect to knots is subjective since both number and locations of knots need to be selected, resulting in a generally large search space for optimal not selection. To simplify the search space, evenly spaced knots are generally adopted. Obviously if few knots are used, one cannot achieve enough smoothing for the underlying functions. Conversely, if more knots than needed are specified, overfitting is a problem. 
+
+To avoid issues that arise with specification of the number and placement of knots, penalized regression splines were proposed by \cite{wahba1980spline}. In this case, a knot is specified at every observed location in the support of the predictor covariate. Obviously this would lead to overfitting, so a term to penalize the wiggliness of the resulting function is introduced. More concretely, penalized regressions splines seek to find the smoothing function $f(x)$ that minimizes 
+\begin{equation} \label{mod:preg}
+\sum_{i=1}^{N}\{y_i-f(x_i)\}^2+\lambda\int f^{\prime \prime} (x)^2dx
+\end{equation} 
+where $\lambda$ is tunable parameter for smoothness controlling. This renders a currently popular method for univariate smoothing with smoothness controlling. 
+
+Further, when we want to smooth with respect to two or more input. For instance, in many cases, we want to find a smooth function $f(x_1,x_2)$ instead of $f(x)$. Knots placing could be less attractive since sparsity of data could become a serious problem when dimension grows. Especially for geographical smoothing, observations on map are generally not uniformly distributed hence if uniform grid is placed, there could be many small areas with no data in there. Observed subjects in epidemiological studies are frequently people and people do not live uniformly on map. Consequently, using knots-based basis expansion could suffer from over parametrization. Thin plate regression splines address this problem in a basis expansion framework \citep{wood2003thin}.   
+
+Similar to the idea of natural cubic regression splines that minimize Eq. (\ref{mod:preg}), bivariate thin plate regression spline smoothers seek to minimize
+\begin{equation} \label{eq:tps}
+\sum_{i=1}^{N}\{y_i-f(\x_i)\}^2
++\lambda\int\int (\frac{\partial^2f}{\partial x_1^2})
++2(\frac{\partial^2f}{\partial x_1 \partial x_2})^2
++(\frac{\partial^2f}{\partial x_2^2})dx_1dx_2.
+\end{equation}
+Similarly, $\lambda$ acts as a tuning parameter that controls the smoothness of fitting and out-of-sample predictive criteria such as AIC, BIC, or GCV (\cite{golub1979generalized}) can be applied for selection of $\lambda$. An advantage of thin plate regression splines is that they offer a smoothing option without specification of a fixed set of knots. In addition, \citet[Chapter 5.5.1]{wood2017generalized} discussed methods to truncate the dimension of basis functions as an effort to reduce then computational burden when data grows big. 
+
+In spatial epidemiologic studies, if exact locations of the observations are known, thin plate regression splines are attractive options given their advantage over knot-based methods. Moreover, if the map of interest is not regularly shaped or there is a strong belief that edge effects may exist, soap film regression splines are potentially preferable due to their advantage in edge effects controlling. \citep{wood2008soap}.
+
+\subsection{Smoothers using Gaussian processes}
+
+A Gaussian process (GP) is a stochastic process indexed by time or space. Consider a GP on domain $\x$. Then the GP is a distribution of function $f(\x)$. That is to say, every realization of this GP will be a function $f(\x)$. The process is called Gaussian since given any finite collection of $\{\x_i,i=1,\dots,n\}$, the distribution of $\{f(\x_i),i=1,\dots,n\}$ is joint Gaussian where the parameters, mean and variance of the Gaussian distribution, are defined by the parameters of the GP. 
+
+To fully specify a Gaussian process, it is necessary to specify the mean and variance function in order to induce the parameters for the joint Gaussian distribution. Consider a Gaussian process defined on the vector space of $\{\mathbf{x}\}$. In formula \ref{eq:gpmean} and \ref{eq:gpcov}, $m(\mathbf{x})$ and $k(\mathbf{x},\mathbf{x}^\prime)$ stand for mean and covariance functions, respectively. Every realization of a Gaussian process is continuous since the correlation coefficient between $f(\x)$ and $f(\x^\prime)$ equals to 1 if $\x=\x^\prime$. Since shape of the generated curves is not restricted to any specific patterns, Gaussian processes could be promising smoothers. In practice, $m(\mathbf{x})$ is usually set to be 0 and squared-exponential covariance function shown in Formula \ref{eq:sqex} is a commonly used. 
+\begin{equation} 
+\label{eq:m3wgp}
+f(\x) \sim \mathcal{G}\mathcal{P}(m(\x),k(\x,\x^\prime))
+\end{equation}
+\vspace{-0.5 in}
+\begin{equation} \label{eq:gpmean}
+m(\mathbf{x})=\E[f(\mathbf{x})]
+\end{equation}
+\vspace{-0.5 in}
+\begin{equation} \label{eq:gpcov}
+k(\mathbf{x},\mathbf{x}^\prime)=\E[(f(\mathbf{x})-f(\mathbf{x}))(f(\mathbf{x}^\prime)-f(\mathbf{x}^\prime))]
+\end{equation}
+\vspace{-0.5 in}
+\begin{equation} \label{eq:sqex}
+k(\mathbf{x},\mathbf{x}^\prime)=\sigma_f^2\exp(-l^2|\x-\x^\prime|^2)%+\sigma_n^2I\{p=q\}
 \end{equation}
 
+The definition of GP leads to a basic understanding of Gaussian processes as following: 
+\begin{enumerate}
+	\item A Gaussian process has infinitely many dimensions.
+	\item Only mean and covariance rule are specified. In most cases, the closer two inputs are, the higher correlation they have.
+	\item Every realization of a Gaussian process is a curve (surface). This result is drawn directly from the fact that correlation coefficient of two inputs $\x$ and $\x^\prime$ goes to 1 as the distance between them goes to 0. 
+\end{enumerate}
 
-In epidemiology studies, geospatial disparities of certain disease risks are of common interest since the potential unequal risks could be a result of location-related risk factors. These factors could be environmental, demographic, socioeconomic among others. Thus, spatial epidemiologists frequently aim to estimate a risk pattern over an area under study, which is frequently a residential geospatial area. 
+For estimation, the GP model can be specified as
+\begin{equation}
+\begin{bmatrix}f \\f^\star\end{bmatrix}
+\sim \mathcal{N}\left(0,\begin{bmatrix}K(X,X) & K(X,X^\star) \\K(X^\star, X) & K(X^\star,X^\star)\end{bmatrix}\right),
+\end{equation}
+where $f$ are training outputs while $f^\star$ stand for test outputs. Also, $X$ stands for the observed inputs and $X^\star$ is the collection of test inputs.
 
-This is an example using the \LaTeX{} template for UCI theses and
-dissertation documents \cite{uci-thesis-latex}. Figure
-\ref{fig:sourcecode} is just for illustration purposes, as is Table
-\ref{tab:coordinates}.
+The GP model is attractive in terms of the fact that on any subset of the whole support, $f$ follows a multivariate Gaussian distribution, allowing users to lean on vast experience with multivariate normal random variables. This is a primary reason why GP is preferred over other stochastic process models.
 
-\begin{figure}
-\begin{verbatim}
-#include <iostream>
-int main(int argc, char** argv) {
-  std::cout << "Hello World." << std::endl;
-  return 0;
-}
-\end{verbatim}
-  \caption{Example source code.}
-  \label{fig:sourcecode}
-\end{figure}
+In practice, it is frequently assumed that instead of an exact GP, the observable outcome is an additive combination of random errors and a GP. 
+\begin{equation}
+\begin{bmatrix}\mathbf{y} \\f^\star\end{bmatrix}
+\sim \mathcal{N}\left(0,\begin{bmatrix}K(X,X)+\sigma_n^2I & K(X,X^\star) \\K(X^\star, X) & K(X^\star,X^\star)\end{bmatrix}\right).
+\end{equation}
+From this setting, we draw inference on $f^\star$ by noting that
+\begin{equation}
+f^\star|X,\mathbf{y},X^\star\sim \mathcal{N}(\bar{f^\star},\text{cov}(f^\star)),
+\end{equation}
+where
+\begin{align}
+\bar{f^\star}&=E[f^\star|X,Y,X^\star]=K(X^\star,X)[K(X,X)+\sigma_n^2I]^{-1}\mathbf{y}\\
+\text{cov}(f^\star)&=K(X^\star,X^\star)-K(X^\star,X)[K(X,X)+\sigma_n^2I]^{-1}K(X,X^\star).
+\end{align}
 
-\section{Background}
+Since properties of multivariate Gaussian distributions are well known, with properly specified priors for the hyperparameters in GP models, posterior distributions can be easily derived. Markov chain Monte Carlo sampling could be further adopted to achieve posterior distributions of the hyperparameters as well as point estimation at explanatory variable locations of interest. 
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+This idea is applicable in geospatial smoothing problems by applying two-dimensional vectors as inputs $\x_i$ to the GP models. Since we are interested in spatial epidemiologic studies with exact longitude and latitude of each location, a spatial GP could be defined as one with mean $0$ and covariance rules defined in Formula \ref{eq:sqex} using $\x=(u,v)$, where $(u,v)$ stands for longitude and latitude, respectively. Similarly, sampling strategies could be used to approximate the posterior distribution of model parameters as well as underlying spatial risk patterns. 
 
-\begin{table}
-  \centering
-  \begin{tabular}{|rr|r|}
-    \hline
-    $x$ & $y$ & $z$ \\
-    \hline
-    14 & 12 & -2 \\
-    0 & 33 & -25 \\
-    -3 & 11 & 22 \\
-    4 & 4 & 6 \\
-    \hline
-  \end{tabular}
-  \caption{Example coordinates.}
-  \label{tab:coordinates}
-\end{table}
+\section{Generalized additive models}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat. Duis aute irure dolor in
-reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+In various studies, merely smoothing over space is generally not sufficient since factors other than space could also have effects on the response of interest or could confound the association between space and the response. Thus, to explore the spatial risk patterns researchers would appreciate a method that estimates the spatial effect with adjustment for those factors. For instance, if we want to explore the spatial pattern of survival rates as in the California ovarian cancer study, social-economic status should be considered in the analysis since it could be a potential confounding variable in the sense that social-economic status could be related to both spatial location and survival. 
 
+Generalized additive models, originally developed by \cite{hastie1990generalized}, are designed to achieve this goal. Based on the linear terms in the mean model defined in Eq. (\ref{mod:glmmean}), flexible functions are added, as is shown in Eq. (\ref{mod:gammean}), rendering a generalized additive models. In each case, $\mu_i=\E(y_i|\x_i)$, $g()$ denotes the link function, $p$ is the number of additive components and $s_k()$, $k=1,\dots,p$ is an arbitrary curve and is commonly defined to be smooth. 
+\begin{equation} \label{mod:glmmean}
+g(\mu_i) =\beta_0+\sum_{k=1}^{p}\beta_kx_{ik}
+\end{equation} 
+
+\begin{equation} \label{mod:gammean}
+g(\mu_i) =\beta_0+\sum_{k=1}^{p}s_k(\x_{ik})
+\end{equation}
+
+Maximum likelihood estimation in generalized linear models can be carried out via an iteratively reweighted least squares (IRLS) algorithm, which could be naturally extended to model fitting for generalized additive models when the flexible functions $s_k()$, $k=1,\dots,p$ are fully parametrized. Spline smoothers, such as cubic regression splines and thin plate regression splines, can be expressed using basis expansions and hence IRLS can be directly applied to GAMs with spline smoothers. 
+
+However, kernel smoothers, such as LOESS, could not be expressed by basis expansion hence the IRLS algorithm does not apply directly in this case. To carry out estimation, a backfitting algorithm \citep{breiman1985estimating} can be used instead. The idea of backfitting algorithm is to fit partial residuals iteratively on each additive component of the mean model until convergence. Using a GAM with continuous outcome specified in \eqref{mod:forbf}, Algorithm \ref{alg:bf} is present as an example. 
+\begin{equation} \label{mod:forbf}
+y_i =\beta_0+\sum_{k=1}^{p}s_k(\x_{ik})+\epsilon_i,\ \ i=1,2,\dots,N.
+\end{equation} 
+
+\begin{algorithm}[h]
+	\caption{Backfitting Algorithm}
+	\begin{algorithmic}[1]
+		\State Initialize $\hat{\beta_0}=\frac{1}{N}\sum_{i=1}^{N}y_i$ and $\hat{s}_k=0$ for all $k$.
+		\While{ At least one of functions $\hat{s}_k$, $k=1,\dots,p$, does not converge} 
+		\For {$k$ from 1 to $p$}
+		\State Fit $\hat{s}_k$ using $\{y_i-\hat{\beta_0}-\sum_{j\neq k}\hat{f_j}(\x_{ik}),i=1,\dots,N\}$ as response.
+		\State Center $\hat{s}_k$ using $\hat{s}_k=\hat{s}_k-\frac{1}{N}\sum_{i=1}^{N}\hat{s}_k(\x_{ik})$.
+		\EndFor
+		\EndWhile
+	\end{algorithmic}
+	\label{alg:bf}
+\end{algorithm}
+
+\section{Generalized linear mixed models}
+
+\subsection{linear mixed models}
+Linear models provide a fundamental approach to model relationship between a Gaussian distributed outcome variable and several explanatory variables via linear terms under the assumption that observations are independent within the dataset in use. A typical linear model is expressed as
+\begin{equation} \label{mod:GLMMlm}
+y_{i}=x_{i}\beta+\epsilon_{i},
+\end{equation}
+where $\epsilon_i \stackrel{i.i.d.}{\sim} N(0,\sigma^2)$.
+
+However, when the dataset of interest includes multiple measurements on some individuals or the dataset is composed of multiple clusters, the independence assumption does not inherently hold since measurements on one particular individual or within one certain cluster should not be considered independent in many cases. Model \eqref{mod:GLMMlm} does not take the probable correlation into account, incorrect inference could be yielded when it is adopted to fit longitudinal or cluster data. 
+
+To account for within-individual correlation arising from longitudinal sampling of individuals over time, \citet{laird1982random} proposed a class linear mixed models (LMMs) given by 
+\begin{equation} \label{mod:lmm}
+y_{ij}=x_{ij}\beta+z_{ij}b_i+\epsilon_{ij},
+\end{equation}
+where $b_i \stackrel{i.i.d.}{\sim} N(0,D)$ and $\mathbf{\epsilon_i}=(\epsilon_{i1},\epsilon_{i2},\dots,\epsilon_{iJ_i})' \sim N(0,R)$, with $b_i$ and $\epsilon_i$ independent. Typically, the fixed effects $x_{ij}\beta$ component of the linear predictor is used to model the scientific association of interest and adjust for potential confounding covariates, the random effects $z_{ij}b_i$ component is used to model individual-specific effects and the $\epsilon_{ij}$'s are assumed to be i.i.d. conditional upon the random effects. LMMs are then fitted by a maximum likelihood (ML) or a restricted maximum likelihood (REML) procedure. 
+
+\subsection{Generalized linear mixed models}
+LMMs concentrate on scenarios where the outcome variable follows a Gaussian distribution. However, outcomes in longitudinal studies could be more generally distributed. For example  When the response follows a Bernoulli or Poisson distribution, LMMs do not apply instantly. 
+
+Analogous to the generalization from a linear model to a generalized linear model, \citet{breslow1993approximate} described a class of generalized linear mixed models (GLMMs) that accommodate correlation in a linear model by incorporating random effects to model non-Gaussian response. 
+
+Under a GLMM framework, the outcome $y_i$ follows a distribution of exponential family with $E(y_i)=\mu_i$ and $\text{var}(y_i)=v(\mu_i)$, where function $v()$ depends on the specific distribution of $y_{i}$. The mean $\mu_i$ is linked to the linear predictor $x_i^T\beta$ by the link function $g()$. Hence the systematic component of a GLMM is commonly written as 
+\begin{equation}\label{mod:GLMMglmm}
+g(\mu_{ij})=x_{ij}\beta + z_{ij}b_i.
+\end{equation}
+\citet{breslow1993approximate} raised 2 potential approximate inference approaches to fit a GLMM, penalized quasi-likelihood (PQL) and marginal quasi-likelihood (MQL). Both of the approaches use iterative procedures with iteratively updated working response and weights. Since our work in Chapter 5 would be based on PQL procedure, an introduction to PQL is provided here. To perform a PQL fitting procedure, Working response $y_{ij}^w$ is defined as
+\begin{equation} \label{eq:workingresponse}
+y_{ij}^w=g(\hat{\mu}_{ij})+(y_{ij}-\hat{\mu}_{ij})g^\prime(\hat{\mu}_{ij}),
+\end{equation}
+with reasonably initialized $\hat{\mu}_{ij}$. The working response vector $\mathbf{y}_{\hat{\mu}}^w$ could then be approximated by a Gaussian distribution 
+\begin{equation} \label{eq:ApproxGauss}
+N[X\beta+Zb,\ g^\prime(\hat{\mu})R_{\hat{\mu}}  g^\prime(\hat{\mu})],
+\end{equation} 
+where $R_{\hat{\mu}}$ is the variance-covariance matrix defined by the assumed outcome distribution given the estimated mean vector $\hat{\mu}$. It follows that a weighted linear mixed model 
+\begin{equation} \label{mod:workingLME}
+\mathbf{y}_{\hat{\mu},ij}^w=x_{ij}\beta+z_{ij}b_i+\epsilon_{ij}
+\end{equation}
+with working diagonal weight matrix 
+\begin{equation} \label{eq:W}
+\hat{W}_{\hat{\mu}}=R_{\hat{\mu}}^{-1}[g^\prime(\hat{\mu})]^{-2}
+\end{equation} 
+could be used to model the working response $\mathbf{y}_{\hat{\mu}}^w$. The PQL estimating procedure iteratively fits weighted linear mixed model with updated working response $\mathbf{y}_{\hat{\mu}}^w$ and working weight matrix $\hat{W}_{\hat{\mu}}$ based on the updated $\hat{\mu}$ at each iteration until the difference in parameter estimations are sufficiently small. 
 
 %%% Local Variables: ***
 %%% mode: latex ***
